@@ -1,28 +1,16 @@
-import type { Metadata } from "next";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { ClerkProvider } from "@clerk/nextjs";
+export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s - Shopcart online store",
-    default: "Shopcart online store",
-  },
-  description: "Shopcart online store, Your one stop shop for all your needs",
-};
+import { Header } from "@/components/storefront/Header";
+import { Footer } from "@/components/storefront/Footer";
 
-export default function RootLayout({
+export default function ClientLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ClerkProvider>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-      </div>
-    </ClerkProvider>
+    <div className="flex min-h-screen flex-col bg-background">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
   );
 }
