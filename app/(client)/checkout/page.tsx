@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -60,10 +60,17 @@ export default function CheckoutPage() {
   const discount = activeCoupon?.discountAmount ?? 0;
   const total = couponTotal;
 
+  // Navigate to the success page as a side effect once the order is placed.
+  // (Doing this directly during render is a React anti-pattern.)
+  useEffect(() => {
+    if (order) {
+      router.push(
+        `/success?order=${encodeURIComponent(order.orderNumber)}&total=${order.totalAmount}`,
+      );
+    }
+  }, [order, router]);
+
   if (order) {
-    router.push(
-      `/success?order=${encodeURIComponent(order.orderNumber)}&total=${order.totalAmount}`,
-    );
     return null;
   }
 
