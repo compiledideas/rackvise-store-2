@@ -1,14 +1,22 @@
 // Public storefront configuration for the guest-only Rackvise storefront.
-// Values resolve from NEXT_PUBLIC_* env vars, with a demo tenant fallback so
-// the app runs out of the box without any setup.
-
-const DEFAULT_BASE_URL = "https://kidoo.compiledideas.dev";
-const DEFAULT_API_KEY = "rv_live_32d00408a2c41bb737860d3ec788aa97af961288219efc7c";
+// Values resolve from NEXT_PUBLIC_* env vars. Both baseUrl and apiKey are
+// required — there is no baked-in fallback because shipping a live API key in
+// the client bundle exposes the tenant catalog to anyone who reads it.
 
 declare const process: { env: Record<string, string | undefined> };
 
+const baseUrl = process.env.NEXT_PUBLIC_STOREFRONT_URL;
+const apiKey = process.env.NEXT_PUBLIC_STOREFRONT_API_KEY;
+
+if (!baseUrl || !apiKey) {
+  throw new Error(
+    "Missing NEXT_PUBLIC_STOREFRONT_URL or NEXT_PUBLIC_STOREFRONT_API_KEY. " +
+      "Copy .env.example to .env.local and fill in your tenant values.",
+  );
+}
+
 export const storefrontConfig = {
-  baseUrl: process.env.NEXT_PUBLIC_STOREFRONT_URL || DEFAULT_BASE_URL,
-  apiKey: process.env.NEXT_PUBLIC_STOREFRONT_API_KEY || DEFAULT_API_KEY,
+  baseUrl,
+  apiKey,
   currency: process.env.NEXT_PUBLIC_STOREFRONT_CURRENCY || "USD",
 };
