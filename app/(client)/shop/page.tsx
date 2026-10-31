@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useStorefrontProducts } from "@rackvise/storefront-sdk";
+import { useStorefrontCategories, useStorefrontProducts } from "@rackvise/storefront-sdk";
 import { SlidersHorizontal } from "lucide-react";
 import { Filters, type ShopFilters } from "@/components/storefront/Filters";
 import {
@@ -12,6 +12,8 @@ import {
 import { EmptyState } from "@/components/storefront/EmptyState";
 import { ErrorState } from "@/components/storefront/QueryState";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export default function ShopPage() {
   const searchParams = useSearchParams();
@@ -21,7 +23,7 @@ export default function ShopPage() {
     search: initialSearch,
     sort: "createdAt-desc",
   });
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [refineOpen, setRefineOpen] = useState(false);
 
   // keep filters in sync if the user searches again from the header
   useEffect(() => {
@@ -38,77 +40,135 @@ export default function ShopPage() {
     limit: 24,
   });
 
+  const categories = useStorefrontCategories();
   const products = data?.data ?? [];
   const total = data?.pagination?.total;
-
-  const filterPanel = (
-    <Filters value={filters} onChange={setFilters} className="space-y-6" />
+  const activeCategory = (categories.data ?? []).find(
+    (c) => c.id === filters.categoryId,
   );
+  const hasRefinements =
+    !!filters.search ||
+    typeof filters.minPrice === "number" ||
+    typeof filters.maxPrice === "number" ||
+    filters.sort !== "createdAt-desc" ||
+    typeof filters.categoryId === "number";
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Shop all products
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          {typeof total === "number"
-            ? `${total} ${total === 1 ? "product" : "products"} available`
-            : "Browse the full catalog"}
-        </p>
-      </div>
+    <div className="page-wrap py-10">
+      {/* Editorial masthead */}
+      <header className="border-b border-line pb-8">
+        <p className="eyebrow">The catalogue</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <h1 className="display-title text-[clamp(2.6rem,7vw,4.5rem)] leading-[0.9] text-ink">
+            {activeCategory ? activeCategory.name : "Shop all"}
+          </h1>
+          <p className="pb-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
+            {typeof total === "number"
+              ? `${total} ${total === 1 ? "item" : "items"}`
+              : "Browse everything"}
+          </p>
+        </div>
+      </header>
 
-      <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
-        {/* Desktop sidebar */}
-        <aside className="hidden lg:block">
-          <div className="sticky top-24 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            {filterPanel}
-          </div>
-        </aside>
-
-        <div>
-          {/* Mobile filter toggle */}
-          <div className="mb-4 lg:hidden">
-            <Button
-              variant="outline"
-              className="w-full justify-center"
-              onClick={() => setMobileFiltersOpen((v) => !v)}
+      {/* Toolbar: category chips + refine toggle */}
+      <div className="sticky top-16 z-30 -mx-1 border-b border-line bg-paper/95 px-1 py-3 backdrop-blur-md">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-1 items-center gap-2 overflow-x-auto scrollbar-hide">
+            <CategoryChip
+              active={!filters.categoryId}
+              onClick={() => setFilters((f) => ({ ...f, categoryId: undefined }))}
             >
-              <SlidersHorizontal className="h-4 w-4" />
-              {mobileFiltersOpen ? "Hide filters" : "Show filters"}
-            </Button>
-            {mobileFiltersOpen ? (
-              <div className="mt-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-                {filterPanel}
-              </div>
-            ) : null}
+              All
+            </CategoryChip>
+            {categories.isLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-8 w-20 rounded-sm" />
+                ))
+              : (categories.data ?? []).map((cat) => (
+                  <CategoryChip
+                    key={cat.id}
+                    active={filters.categoryId === cat.id}
+                    onClick={() =>
+                      setFilters((f) => ({
+                        ...f,
+                        categoryId: f.categoryId === cat.id ? undefined : cat.id,
+                      }))
+                    }
+                  >
+                    {cat.name}
+                  </CategoryChip>
+                ))}
           </div>
-
-          {isLoading ? (
-            <ProductGridSkeleton count={12} />
-          ) : isError ? (
-            <ErrorState onRetry={() => refetch()} />
-          ) : products.length === 0 ? (
-            <EmptyState
-              icon={SlidersHorizontal}
-              title="No products match your filters"
-              description="Try adjusting your search, price range, or category."
-              action={
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setFilters({ sort: "createdAt-desc" })
-                  }
-                >
-                  Clear filters
-                </Button>
-              }
-            />
-          ) : (
-            <ProductGrid products={products} priorityCount={4} />
-          )}
+          <Button
+            variant={refineOpen || hasRefinements ? "default" : "outline"}
+            size="sm"
+            className="shrink-0"
+            onClick={() => setRefineOpen((v) => !v)}
+            aria-expanded={refineOpen}
+          >
+            <SlidersHorizontal className="size-3.5" />
+            Refine
+          </Button>
         </div>
       </div>
+
+      {/* Refine panel */}
+      {refineOpen ? (
+        <div className="fade-in">
+          <Filters value={filters} onChange={setFilters} />
+        </div>
+      ) : null}
+
+      {/* Grid */}
+      <div className="pt-10">
+        {isLoading ? (
+          <ProductGridSkeleton count={12} />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()} />
+        ) : products.length === 0 ? (
+          <EmptyState
+            icon={SlidersHorizontal}
+            title="No products match your filters"
+            description="Try adjusting your search, price range, or category."
+            action={
+              <Button
+                variant="outline"
+                onClick={() => setFilters({ sort: "createdAt-desc" })}
+              >
+                Clear filters
+              </Button>
+            }
+          />
+        ) : (
+          <ProductGrid products={products} priorityCount={4} editorial />
+        )}
+      </div>
     </div>
+  );
+}
+
+function CategoryChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "shrink-0 px-3.5 py-2 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors duration-300",
+        active
+          ? "bg-accent text-white dark:text-[#131009]"
+          : "border border-line text-ink-soft hover:border-ink hover:text-ink",
+      )}
+    >
+      {children}
+    </button>
   );
 }

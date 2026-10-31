@@ -10,17 +10,13 @@ export default function StoresPage() {
   const { data, isLoading, isError, refetch } = useStorefrontPointOfSells();
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-12">
-      <header className="mx-auto max-w-2xl space-y-3 text-center">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-shop_light_pink text-shop_dark_green">
-          <Store className="h-6 w-6" />
-        </span>
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-          Our stores
-        </h1>
-        <p className="text-base text-gray-500">
-          Visit our physical locations. Find store addresses, hours, and contact
-          info.
+    <div className="page-wrap py-14">
+      <header className="mb-12 border-b border-line pb-8 text-center">
+        <p className="eyebrow">Visit us</p>
+        <h1 className="display-title mt-3 text-[clamp(2.2rem,6vw,3.8rem)] leading-[0.9] text-ink">Our stores</h1>
+        <p className="text-base text-muted-foreground">
+          Visit our physical locations. Find store addresses, hours, and
+          contact info.
         </p>
       </header>
 
@@ -44,14 +40,14 @@ export default function StoresPage() {
             {data.map((pos) => (
               <article
                 key={pos.id}
-                className="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+                className="flex flex-col gap-5 rounded-2xl border border-line bg-card p-6"
               >
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                <div className="space-y-1.5">
+                  <h2 className="display-title text-lg font-semibold text-ink">
                     {pos.name}
                   </h2>
-                  <p className="flex items-start gap-2 text-sm text-gray-500">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-shop_dark_green" />
+                  <p className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-accent-deep" />
                     <span>
                       {pos.address}
                       {pos.city ? `, ${pos.city}` : ""}
@@ -60,17 +56,17 @@ export default function StoresPage() {
                   </p>
                 </div>
 
-                <dl className="space-y-2 text-sm">
+                <dl className="space-y-3 text-sm">
                   {pos.phone ? (
                     <div className="space-y-0.5">
-                      <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-                        <Phone className="h-3.5 w-3.5 text-shop_dark_green" />
+                      <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+                        <Phone className="size-3.5 text-accent-deep" />
                         Contact
                       </dt>
                       <dd>
                         <a
                           href={`tel:${pos.phone}`}
-                          className="font-medium text-gray-900 hover:text-shop_dark_green"
+                          className="font-medium text-ink transition-colors hover:text-accent-deep"
                         >
                           {pos.phone}
                         </a>
@@ -80,14 +76,14 @@ export default function StoresPage() {
 
                   {pos.email ? (
                     <div className="space-y-0.5">
-                      <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-                        <Mail className="h-3.5 w-3.5 text-shop_dark_green" />
+                      <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+                        <Mail className="size-3.5 text-accent-deep" />
                         Email
                       </dt>
                       <dd>
                         <a
                           href={`mailto:${pos.email}`}
-                          className="font-medium text-gray-900 hover:text-shop_dark_green"
+                          className="font-medium text-ink transition-colors hover:text-accent-deep"
                         >
                           {pos.email}
                         </a>
@@ -96,30 +92,34 @@ export default function StoresPage() {
                   ) : null}
 
                   {pos.workingHours &&
-                    Object.keys(pos.workingHours).length > 0 ? (
-                    <div className="space-y-1 pt-1">
-                      <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-gray-500">
-                        <Clock className="h-3.5 w-3.5 text-shop_dark_green" />
+                  Object.keys(pos.workingHours).length > 0 ? (
+                    <div className="space-y-1.5 pt-1">
+                      <dt className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+                        <Clock className="size-3.5 text-accent-deep" />
                         Hours
-                      </p>
-                      <ul className="space-y-0.5 text-sm text-gray-700">
-                        {Object.entries(pos.workingHours).map(
-                          ([day, hours]) => {
-                            const wh = hours as { open?: string; close?: string };
-                            return (
-                              <li
-                                key={day}
-                                className="flex justify-between gap-3 capitalize"
-                              >
-                                <span className="text-gray-500">{day}</span>
-                                <span className="font-medium">
-                                  {wh.open} - {wh.close}
-                                </span>
-                              </li>
-                            );
-                          },
-                        )}
-                      </ul>
+                      </dt>
+                      <dd>
+                        <ul className="space-y-1 text-sm">
+                          {Object.entries(pos.workingHours).map(
+                            ([day, hours]) => {
+                              const wh = hours as { open?: string; close?: string };
+                              return (
+                                <li
+                                  key={day}
+                                  className="flex justify-between gap-3 capitalize"
+                                >
+                                  <span className="text-muted-foreground">
+                                    {day}
+                                  </span>
+                                  <span className="font-medium text-ink">
+                                    {wh.open} – {wh.close}
+                                  </span>
+                                </li>
+                              );
+                            },
+                          )}
+                        </ul>
+                      </dd>
                     </div>
                   ) : null}
                 </dl>

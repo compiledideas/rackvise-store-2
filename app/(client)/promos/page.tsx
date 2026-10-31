@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { useStorefrontPromos } from "@rackvise/storefront-sdk";
-import { motion } from "motion/react";
+import type { Promo, PromoProduct } from "@rackvise/storefront-sdk";
 import { Sparkles, ArrowRight, Tag } from "lucide-react";
 import { ErrorState } from "@/components/storefront/QueryState";
+import { EmptyState } from "@/components/storefront/EmptyState";
+import {
+  ProductGrid,
+  ProductGridSkeleton,
+} from "@/components/storefront/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -12,77 +17,110 @@ export default function PromosPage() {
   const { data, isLoading, isError, refetch } = useStorefrontPromos();
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-10">
-      <header className="mb-8 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-shop_light_green">
-          Limited time
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+    <div className="page-wrap py-12">
+      <header className="mb-10 border-b border-line pb-8">
+        <p className="eyebrow">Limited time</p>
+        <h1 className="display-title mt-3 text-[clamp(2.2rem,6vw,3.8rem)] leading-[0.9] text-ink">
           Active promotions
         </h1>
-        <p className="max-w-xl text-sm text-gray-500">
-          Check out our current offers and save on curated essentials while
-          stocks last.
+        <p className="mt-3 max-w-xl text-sm text-ink-soft">
+          Current offers across the catalogue — promo prices applied
+          automatically in your cart.
         </p>
       </header>
 
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-2xl" />
+        <div className="space-y-10">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="space-y-6">
+              <Skeleton className="h-40 rounded-3xl" />
+              <ProductGridSkeleton count={4} />
+            </div>
           ))}
         </div>
       ) : isError ? (
         <ErrorState onRetry={() => refetch()} />
       ) : !data || data.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 py-16 text-center">
-          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-shop_light_pink text-shop_dark_green">
-            <Tag className="h-7 w-7" />
-          </span>
-          <h3 className="text-lg font-semibold text-gray-900">
-            No active promotions
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Check back soon for new deals and discounts.
-          </p>
-          <Button asChild className="mt-6 rounded-full">
-            <Link href="/shop">Browse all products</Link>
-          </Button>
-        </div>
+        <EmptyState
+          icon={Tag}
+          title="No active promotions"
+          description="Check back soon for new deals and discounts."
+          action={
+            <Button asChild className="rounded-sm">
+              <Link href="/shop">Browse all products</Link>
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.map((promo, index) => (
-            <motion.div
-              key={promo.id}
-              initial={{ opacity: 0, y: 12 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: index * 0.05 }}
-            >
-              <Link
-                href="#"
-                className="group relative flex h-full flex-col overflow-hidden rounded-3xl bg-gradient-to-br from-shop_dark_green to-shop_btn_dark_green p-6 text-white shadow-sm transition-shadow hover:shadow-md md:p-8"
-              >
-                <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-shop_orange/15 blur-2xl" />
-                <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">
-                  <Sparkles className="h-3 w-3" />
-                  {promo.products.length}{" "}
-                  {promo.products.length === 1 ? "product" : "products"}
-                </span>
-                <h3 className="mt-3 text-xl font-bold md:text-2xl">
-                  {promo.title}
-                </h3>
-                {promo.subTitle ? (
-                  <p className="mt-1 text-sm text-white/75">{promo.subTitle}</p>
-                ) : null}
-                <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-white/80 group-hover:text-white hoverEffect">
-                  Shop now <ArrowRight className="h-4 w-4" />
-                </span>
-              </Link>
-            </motion.div>
+        <div className="space-y-16">
+          {data.map((promo) => (
+            <PromoSection key={promo.id} promo={promo} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function PromoSection({ promo }: { promo: Promo }) {
+  const products: PromoProduct[] = promo.products ?? [];
+
+  return (
+    <section className="rise-in space-y-7">
+      {/* Promo banner */}
+      <div className="relative overflow-hidden bg-accent text-white dark:text-[#131009]">
+        <div className="grid items-center gap-8 p-8 md:grid-cols-[1fr_180px] md:p-10">
+          <div className="flex flex-col items-start gap-5">
+            <span className="inline-flex items-center gap-1.5 border-2 border-current px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em]">
+              <Sparkles className="size-3.5" />
+              {products.length} {products.length === 1 ? "product" : "products"}{" "}
+              on sale
+            </span>
+            <div>
+              <h2 className="display-title text-2xl md:text-3xl">{promo.title}</h2>
+              {promo.subTitle ? (
+                <p className="mt-2 max-w-lg text-sm font-medium opacity-80">
+                  {promo.subTitle}
+                </p>
+              ) : null}
+            </div>
+          </div>
+          {promo.imageUrl ? (
+            <div className="relative hidden aspect-[3/4] overflow-hidden md:block">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={promo.imageUrl}
+                alt={promo.title}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Promo-priced products — promoPrice becomes the current price,
+          the regular price is struck through. */}
+      {products.length > 0 ? (
+        <ProductGrid
+          products={products.map((p) => ({
+            ...p,
+            price: p.promoPrice,
+            oldPrice: p.price,
+          }))}
+        />
+      ) : (
+        <EmptyState
+          title="No products in this promo yet"
+          description="Check back soon — offers are updated regularly."
+          action={
+            <Button asChild variant="outline" className="rounded-sm">
+              <Link href="/shop">
+                Browse all products <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          }
+        />
+      )}
+    </section>
   );
 }

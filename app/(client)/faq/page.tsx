@@ -1,7 +1,6 @@
 "use client";
 
 import { useStorefrontFaqs } from "@rackvise/storefront-sdk";
-import { LifeBuoy } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -18,15 +17,11 @@ export default function FaqPage() {
   const active = (faqs ?? []).filter((f) => f.isActive);
 
   return (
-    <div className="mx-auto max-w-screen-xl px-4 py-12">
-      <header className="mx-auto max-w-2xl space-y-3 text-center">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-shop_light_pink text-shop_dark_green">
-          <LifeBuoy className="h-6 w-6" />
-        </span>
-        <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-          Frequently asked questions
-        </h1>
-        <p className="text-base text-gray-500">
+    <div className="page-wrap py-14">
+      <header className="mb-12 border-b border-line pb-8 text-center">
+        <p className="eyebrow">Help center</p>
+        <h1 className="display-title mt-3 text-[clamp(2.2rem,6vw,3.8rem)] leading-[0.9] text-ink">Frequently asked questions</h1>
+        <p className="text-base text-muted-foreground">
           Find answers to common questions about ordering, shipping, and more.
         </p>
       </header>
@@ -35,7 +30,7 @@ export default function FaqPage() {
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-xl" />
+              <Skeleton key={i} className="h-14 w-full rounded-2xl" />
             ))}
           </div>
         ) : isError ? (
@@ -49,19 +44,19 @@ export default function FaqPage() {
           <Accordion
             type="single"
             collapsible
-            className="rounded-2xl border border-gray-100 bg-white"
+            className="rounded-2xl border border-line bg-card px-5"
           >
             {active.map((faq) => (
               <AccordionItem
                 key={faq.id}
                 value={String(faq.id)}
-                className="px-5"
+                className="border-line last:border-b-0"
               >
-                <AccordionTrigger className="text-left text-sm font-semibold text-gray-900"                >
+                <AccordionTrigger className="py-4 text-left text-sm font-semibold text-ink">
                   {faq.questionEN}
                 </AccordionTrigger>
                 <AccordionContent>
-                  <p className="text-sm leading-relaxed text-gray-600">
+                  <p className="text-sm leading-relaxed text-ink-soft">
                     {faq.answerEN}
                   </p>
                 </AccordionContent>
