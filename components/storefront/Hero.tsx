@@ -10,6 +10,7 @@ import {
 } from "@rackvise/storefront-sdk";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
+import { primaryProductImage } from "@/lib/product-image";
 import { useCurrencySymbol } from "@/hooks/useCurrencySymbol";
 
 export function Hero() {
@@ -34,7 +35,7 @@ export function Hero() {
     { enabled: !heroImage },
   );
   const collage =
-    !heroImage && (featured?.data ?? []).some((p) => p.images?.[0]?.url);
+    !heroImage && (featured?.data ?? []).some((p) => primaryProductImage(p));
 
   return (
     <section className="relative border-b border-line">
@@ -123,7 +124,7 @@ function HeroCollage({
 }: {
   products: { id: number; name: string; images?: { url: string }[] }[];
 }) {
-  const tiles = [0, 1, 2, 3].map((i) => products[i]?.images?.[0]?.url);
+  const tiles = [0, 1, 2, 3].map((i) => primaryProductImage(products[i]));
   return (
     <div className="grid aspect-[4/5] grid-cols-2 gap-3">
       {tiles.map((url, i) => (

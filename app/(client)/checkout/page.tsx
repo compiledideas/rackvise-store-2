@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { formatPrice } from "@/lib/format";
+import { primaryProductImage } from "@/lib/product-image";
 import { Price } from "@/components/storefront/Price";
 import { EmptyState } from "@/components/storefront/EmptyState";
 import { ProductImage } from "@/components/storefront/ProductImage";
@@ -268,7 +269,7 @@ export default function CheckoutPage() {
               {items.map((item) => (
                 <li key={item.id} className="flex items-center gap-3">
                   <ProductImage
-                    src={item.product.images?.[0]?.url}
+                    src={primaryProductImage(item.product)}
                     alt={item.product.name}
                     className="size-11 shrink-0 border border-line"
                     sizes="44px"

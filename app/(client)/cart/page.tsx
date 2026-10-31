@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useStorefrontCart } from "@rackvise/storefront-sdk";
 import { ArrowRight, ShoppingBag, Trash2, X, Truck } from "lucide-react";
 import toast from "react-hot-toast";
+import { primaryProductImage } from "@/lib/product-image";
 import { Price } from "@/components/storefront/Price";
 import { ProductImage } from "@/components/storefront/ProductImage";
 import { QuantityStepper } from "@/components/storefront/QuantityStepper";
@@ -102,7 +103,7 @@ export default function CartPage() {
               >
                 <Link href={`/product/${item.product.id}`} className="shrink-0">
                   <ProductImage
-                    src={item.product.images?.[0]?.url}
+                    src={primaryProductImage(item.product)}
                     alt={item.product.name}
                     className="size-24 rounded-xl border border-line"
                     sizes="96px"

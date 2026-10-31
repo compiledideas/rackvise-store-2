@@ -89,7 +89,18 @@ function ProductView({ id }: { id: number }) {
 
   const variants = product?.variants ?? [];
   // Variant-specific shots come first when a variant is selected, so the
-  // gallery reflects the chosen colour.
+  // gallery reflects the chosen colour. Products without their own photos
+  // fall back to the variant images (first variant first).
+  const variantFirst =
+    !product?.images?.length && !variant?.images?.length
+      ? variants.flatMap((v) =>
+          (v.images ?? []).map((img) => ({
+            id: img.id,
+            url: img.url,
+            alt: `${product?.name ?? ""} — ${v.name}`,
+          })),
+        )
+      : [];
   const images = [
     ...(variant?.images ?? []).map((img) => ({
       id: img.id,
@@ -97,7 +108,10 @@ function ProductView({ id }: { id: number }) {
       alt: `${product?.name ?? ""} — ${variant?.name ?? ""}`,
     })),
     ...(product?.images ?? []),
-  ];
+    ...variantFirst,
+  ].filter(
+    (img, i, all) => all.findIndex((other) => other.url === img.url) === i,
+  );
 
   const price = product ? resolvePrice(product.price, variant, subVariant) : 0;
   const stock = product ? resolveStock(product.stock, variant, subVariant) : 0;

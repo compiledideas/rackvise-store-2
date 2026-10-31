@@ -8,6 +8,7 @@ import type { Product } from "@rackvise/storefront-sdk";
 import { useStorefrontCart } from "@rackvise/storefront-sdk";
 import { cn } from "@/lib/utils";
 import { discountPercent } from "@/lib/format";
+import { primaryProductImage } from "@/lib/product-image";
 import { Badge } from "@/components/ui/badge";
 import { Price } from "./Price";
 import { ProductImage } from "./ProductImage";
@@ -35,7 +36,7 @@ export function ProductCard({
   const { addToCart } = useStorefrontCart();
   const [added, setAdded] = useState(false);
 
-  const image = product.images?.[0]?.url;
+  const image = primaryProductImage(product);
   const off = discountPercent(product.price, product.oldPrice ?? undefined);
   const outOfStock = (product.stock ?? 0) <= 0;
   // Products with variants must be configured on the detail page — a blind
