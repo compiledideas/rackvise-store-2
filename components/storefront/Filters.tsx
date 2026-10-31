@@ -1,11 +1,9 @@
 "use client";
 
-import { useStorefrontCategories } from "@rackvise/storefront-sdk";
-import type { GetProductsParams } from "@rackvise/storefront-sdk";
 import { Search, X } from "lucide-react";
+import type { GetProductsParams } from "@rackvise/storefront-sdk";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export interface ShopFilters {
@@ -25,66 +23,44 @@ interface FiltersProps {
 const sortOptions: { label: string; value: NonNullable<ShopFilters["sort"]> }[] =
   [
     { label: "Newest", value: "createdAt-desc" },
-    { label: "Name: A–Z", value: "name-asc" },
-    { label: "Price: Low to High", value: "price-asc" },
-    { label: "Price: High to Low", value: "price-desc" },
+    { label: "Name A–Z", value: "name-asc" },
+    { label: "Price ↑", value: "price-asc" },
+    { label: "Price ↓", value: "price-desc" },
   ];
 
+/**
+ * Horizontal refine panel — search, price range and sort laid out as
+ * editorial columns (categories live in the shop toolbar).
+ */
 export function Filters({ value, onChange, className }: FiltersProps) {
-  const { data: categories, isLoading } = useStorefrontCategories();
-
   const set = (patch: Partial<ShopFilters>) => onChange({ ...value, ...patch });
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div
+      className={cn(
+        "grid gap-8 border-b border-line px-1 py-6 sm:grid-cols-3",
+        className,
+      )}
+    >
       {/* Search */}
-      <div className="space-y-2">
-        <Label htmlFor="filter-search" className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <div className="space-y-2.5">
+        <Label className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-soft">
           Search
         </Label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-ink-soft" />
           <Input
-            id="filter-search"
             value={value.search ?? ""}
             onChange={(e) => set({ search: e.target.value || undefined })}
-            placeholder="Search products..."
-            className="pl-9"
+            placeholder="Keyword…"
+            className="ps-9"
           />
         </div>
       </div>
 
-      {/* Categories */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-          Category
-        </Label>
-        <div className="flex flex-wrap gap-1.5">
-          <CategoryChip
-            active={!value.categoryId}
-            onClick={() => set({ categoryId: undefined })}
-          >
-            All
-          </CategoryChip>
-          {isLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-7 w-16 rounded-full" />
-              ))
-            : (categories ?? []).map((cat) => (
-                <CategoryChip
-                  key={cat.id}
-                  active={value.categoryId === cat.id}
-                  onClick={() => set({ categoryId: cat.id })}
-                >
-                  {cat.name}
-                </CategoryChip>
-              ))}
-        </div>
-      </div>
-
       {/* Price */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <div className="space-y-2.5">
+        <Label className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-soft">
           Price range
         </Label>
         <div className="flex items-center gap-2">
@@ -99,7 +75,7 @@ export function Filters({ value, onChange, className }: FiltersProps) {
               })
             }
           />
-          <span className="text-gray-400">–</span>
+          <span className="text-ink-soft">–</span>
           <Input
             type="number"
             min={0}
@@ -115,21 +91,22 @@ export function Filters({ value, onChange, className }: FiltersProps) {
       </div>
 
       {/* Sort */}
-      <div className="space-y-2">
-        <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <div className="space-y-2.5">
+        <Label className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-soft">
           Sort by
         </Label>
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {sortOptions.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => set({ sort: opt.value })}
+              aria-pressed={value.sort === opt.value}
               className={cn(
-                "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium hoverEffect",
+                "px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-300",
                 value.sort === opt.value
-                  ? "bg-shop_dark_green text-white"
-                  : "text-gray-600 hover:bg-gray-100",
+                  ? "bg-ink text-paper"
+                  : "border border-line text-ink-soft hover:border-ink hover:text-ink",
               )}
             >
               {opt.label}
@@ -138,39 +115,13 @@ export function Filters({ value, onChange, className }: FiltersProps) {
         </div>
       </div>
 
-      {/* Clear */}
       <button
         type="button"
         onClick={() => onChange({})}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-shop_dark_green hover:text-shop_light_green hoverEffect"
+        className="inline-flex items-center gap-1.5 self-end text-[11px] font-bold uppercase tracking-[0.14em] text-accent-deep"
       >
-        <X className="h-4 w-4" /> Clear filters
+        <X className="size-3.5" /> Clear all
       </button>
     </div>
-  );
-}
-
-function CategoryChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "rounded-full px-3 py-1.5 text-xs font-semibold hoverEffect",
-        active
-          ? "bg-shop_dark_green text-white"
-          : "bg-gray-100 text-gray-600 hover:bg-gray-200",
-      )}
-    >
-      {children}
-    </button>
   );
 }

@@ -1,38 +1,52 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
-import { motion } from "motion/react";
-import { ShoppingBag, Check } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBag, Check, SlidersHorizontal } from "lucide-react";
+import toast from "react-hot-toast";
 import type { Product } from "@rackvise/storefront-sdk";
 import { useStorefrontCart } from "@rackvise/storefront-sdk";
 import { cn } from "@/lib/utils";
 import { discountPercent } from "@/lib/format";
-import toast from "react-hot-toast";
+import { Badge } from "@/components/ui/badge";
 import { Price } from "./Price";
 import { ProductImage } from "./ProductImage";
 
 interface ProductCardProps {
   product: Product;
   priority?: boolean;
+  index?: number;
+  /** Stretch the image to fill the card height (for mosaic hero tiles). */
+  fillImage?: boolean;
+  className?: string;
 }
 
-export function ProductCard({ product, priority }: ProductCardProps) {
+/**
+ * Borderless catalogue card — image on the paper background, meta row below.
+ * No card chrome; the grid's whitespace does the separating.
+ */
+export function ProductCard({
+  product,
+  priority,
+  index,
+  fillImage = false,
+  className,
+}: ProductCardProps) {
   const { addToCart } = useStorefrontCart();
   const [added, setAdded] = useState(false);
 
   const image = product.images?.[0]?.url;
   const off = discountPercent(product.price, product.oldPrice ?? undefined);
   const outOfStock = (product.stock ?? 0) <= 0;
+  // Products with variants must be configured on the detail page — a blind
+  // quick-add would put the base product in the cart at the wrong price.
+  const hasVariants = (product.variants?.length ?? 0) > 0;
   const category = product.categories?.[0]?.category?.name;
 
-  const handleAdd = (e: React.MouseEvent) => {
+  const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (outOfStock) {
-      toast.error("This product is out of stock");
-      return;
-    }
+    if (outOfStock || hasVariants) return;
     addToCart(product);
     setAdded(true);
     toast.success(`${product.name} added to cart`);
@@ -40,73 +54,70 @@ export function ProductCard({ product, priority }: ProductCardProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.35 }}
+    <Link
+      href={`/product/${product.id}`}
+      className={cn(
+        "group flex h-full flex-col",
+        className,
+      )}
     >
-      <Link
-        href={`/product/${product.id}`}
-        className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-shadow hover:shadow-md"
-      >
-        <div className="relative">
-          <ProductImage
-            src={image}
-            alt={product.name}
-            className="aspect-square w-full"
-            priority={priority}
+      <div className={cn("zoom-frame relative", fillImage && "flex-1")}>
+        <ProductImage
+          src={image}
+          alt={product.name}
+          className={cn(
+            "w-full",
+            fillImage ? "h-full min-h-0" : "aspect-[3/4]",
+          )}
+          imageClassName={cn("zoom-img", outOfStock && "opacity-60 saturate-50")}
+          priority={priority}
+          sizes="(max-width: 640px) 50vw, (max-width: 1200px) 33vw, 25vw"
+        />
+        <div className="absolute start-3 top-3 flex flex-col gap-1.5">
+          {off ? <Badge variant="sale">-{off}%</Badge> : null}
+          {outOfStock ? <Badge>Sold out</Badge> : null}
+        </div>
+        {typeof index === "number" ? (
+          <span className="absolute end-3 top-3 text-[11px] font-bold tracking-[0.12em] text-ink/50 tabular-nums">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+        ) : null}
+
+        {outOfStock ? null : hasVariants ? (
+          <span className="absolute bottom-3 end-3 inline-flex translate-y-1 items-center gap-1.5 bg-ink px-3 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-paper opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100">
+            <SlidersHorizontal className="size-3.5" /> Options
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            aria-label={`Add ${product.name} to cart`}
+            className={cn(
+              "absolute bottom-3 end-3 flex size-10 translate-y-1 items-center justify-center text-white opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100 dark:text-[#131009]",
+              added ? "bg-success" : "bg-ink hover:bg-accent",
+            )}
+          >
+            {added ? <Check className="size-4" /> : <ShoppingBag className="size-4" />}
+          </button>
+        )}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-1 pt-3">
+        {category ? (
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
+            {category}
+          </span>
+        ) : null}
+        <h3 className="line-clamp-1 text-[15px] font-semibold leading-snug text-ink decoration-accent decoration-2 underline-offset-4 transition-colors duration-300 group-hover:text-accent group-hover:underline">
+          {product.name}
+        </h3>
+        <div className="mt-0.5">
+          <Price
+            amount={product.price}
+            oldAmount={product.oldPrice ?? undefined}
           />
-          <div className="absolute left-3 top-3 flex flex-col gap-1.5">
-            {off ? (
-              <span className="rounded-full bg-shop_orange px-2.5 py-1 text-[11px] font-bold text-white shadow-sm">
-                -{off}%
-              </span>
-            ) : null}
-            {outOfStock ? (
-              <span className="rounded-full bg-gray-900/85 px-2.5 py-1 text-[11px] font-semibold text-white">
-                Sold out
-              </span>
-            ) : null}
-          </div>
         </div>
-
-        <div className="flex flex-1 flex-col gap-2 p-4">
-          {category ? (
-            <span className="text-[11px] font-medium uppercase tracking-wide text-gray-400">
-              {category}
-            </span>
-          ) : null}
-          <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 group-hover:text-shop_dark_green hoverEffect">
-            {product.name}
-          </h3>
-
-          <div className="mt-auto flex items-end justify-between gap-2 pt-2">
-            <Price
-              amount={product.price}
-              oldAmount={product.oldPrice ?? undefined}
-              className="text-base"
-            />
-            <button
-              type="button"
-              onClick={handleAdd}
-              aria-label={`Add ${product.name} to cart`}
-              className={cn(
-                "inline-flex h-9 w-9 items-center justify-center rounded-full text-white shadow-sm hoverEffect",
-                added
-                  ? "bg-shop_light_green"
-                  : "bg-shop_dark_green/90 hover:bg-shop_dark_green",
-              )}
-            >
-              {added ? (
-                <Check className="h-4 w-4" />
-              ) : (
-                <ShoppingBag className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
+      </div>
+    </Link>
   );
 }

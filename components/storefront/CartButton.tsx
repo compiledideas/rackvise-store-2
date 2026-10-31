@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useStorefrontCart } from "@rackvise/storefront-sdk";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function CartButton({ className }: { className?: string }) {
@@ -11,15 +11,15 @@ export function CartButton({ className }: { className?: string }) {
   return (
     <Link
       href="/cart"
-      aria-label="View cart"
+      aria-label={`View cart${totalItems > 0 ? ` (${totalItems} items)` : ""}`}
       className={cn(
-        "relative inline-flex h-10 w-10 items-center justify-center rounded-full text-gray-700 hover:bg-gray-100 hover:text-shop_dark_green hoverEffect",
+        "relative inline-flex size-10 items-center justify-center text-ink transition-colors duration-300 hover:bg-paper-deep",
         className,
       )}
     >
-      <ShoppingCart className="h-5 w-5" />
+      <ShoppingBag className="size-5" strokeWidth={1.75} />
       {totalItems > 0 ? (
-        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-shop_orange px-1 text-[10px] font-bold text-white">
+        <span className="absolute -end-1 -top-1 flex h-5 min-w-5 items-center justify-center bg-accent px-1 text-[10px] font-bold text-white dark:text-[#131009]">
           {totalItems > 99 ? "99+" : totalItems}
         </span>
       ) : null}

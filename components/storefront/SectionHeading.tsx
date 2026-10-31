@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SectionHeadingProps {
@@ -6,6 +7,7 @@ interface SectionHeadingProps {
   title: string;
   description?: string;
   viewAllHref?: string;
+  viewAllLabel?: string;
   className?: string;
 }
 
@@ -14,34 +16,32 @@ export function SectionHeading({
   title,
   description,
   viewAllHref,
+  viewAllLabel = "View all",
   className,
 }: SectionHeadingProps) {
   return (
     <div
       className={cn(
-        "mb-6 flex items-end justify-between gap-4",
+        "mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line pb-5",
         className,
       )}
     >
       <div>
-        {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-shop_light_green">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h2 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+        {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+        <h2 className="display-title mt-2.5 text-2xl text-ink sm:text-3xl">
           {title}
         </h2>
         {description ? (
-          <p className="mt-1 text-sm text-gray-500">{description}</p>
+          <p className="mt-2 max-w-xl text-sm text-ink-soft">{description}</p>
         ) : null}
       </div>
       {viewAllHref ? (
         <Link
           href={viewAllHref}
-          className="shrink-0 text-sm font-semibold text-shop_dark_green hover:text-shop_light_green hoverEffect"
+          className="group inline-flex shrink-0 items-center gap-2 text-[12px] font-bold uppercase tracking-[0.16em] text-ink transition-colors duration-300 hover:text-accent"
         >
-          View all →
+          {viewAllLabel}
+          <ArrowRight className="size-4 text-accent transition-transform duration-300 group-hover:translate-x-1" />
         </Link>
       ) : null}
     </div>

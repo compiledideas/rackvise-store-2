@@ -1,56 +1,58 @@
 "use client";
 
 import { useStorefrontStats } from "@rackvise/storefront-sdk";
-import { PackageCheck, Boxes, Truck, ShoppingBag } from "lucide-react";
+import type { StorefrontStats } from "@rackvise/storefront-sdk";
+import { cn } from "@/lib/utils";
 
+// The live API also returns deliveredOrders / onlineOrders; the SDK's
+// StorefrontStats type (v0.5.0) only declares totalOrders. Accept both shapes.
+type LiveStorefrontStats = StorefrontStats & {
+  deliveredOrders?: number;
+  onlineOrders?: number;
+};
+
+/**
+ * Store totals as an editorial figures row — big display numerals divided by
+ * hairlines. Adapts to whichever stats the API returns.
+ */
 export function StatStrip() {
   const { data, isLoading } = useStorefrontStats();
+  const stats = data as LiveStorefrontStats | undefined;
 
-  const stats = [
-    {
-      label: "Products",
-      value: data?.totalProducts,
-      icon: Boxes,
-    },
-    {
-      label: "In stock",
-      value: data?.totalStock,
-      icon: PackageCheck,
-    },
-    {
-      label: "Orders delivered",
-      value: data?.deliveredOrders,
-      icon: Truck,
-    },
-    {
-      label: "Online orders",
-      value: data?.onlineOrders,
-      icon: ShoppingBag,
-    },
+  const hasOrderSplit =
+    typeof stats?.deliveredOrders === "number" ||
+    typeof stats?.onlineOrders === "number";
+
+  const figures = [
+    { label: "Products in catalogue", value: stats?.totalProducts },
+    { label: "Units in stock", value: stats?.totalStock },
+    ...(hasOrderSplit
+      ? [
+          { label: "Orders delivered", value: stats?.deliveredOrders ?? 0 },
+          { label: "Online orders", value: stats?.onlineOrders ?? 0 },
+        ]
+      : [{ label: "Orders placed", value: stats?.totalOrders }]),
   ];
 
   return (
-    <section className="mx-auto max-w-screen-xl px-4 py-12">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <div
-            key={label}
-            className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
-          >
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-shop_light_pink text-shop_dark_green">
-              <Icon className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-2xl font-bold tabular-nums text-gray-900">
-                {isLoading ? "—" : (value ?? 0).toLocaleString("en-US")}
-              </p>
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                {label}
-              </p>
-            </div>
+    <section className="page-wrap">
+      <dl
+        className={cn(
+          "grid grid-cols-2 gap-px border border-line bg-line",
+          figures.length === 4 ? "lg:grid-cols-4" : "sm:grid-cols-3",
+        )}
+      >
+        {figures.map(({ label, value }) => (
+          <div key={label} className="bg-surface p-6">
+            <dd className="display-title text-3xl text-ink tabular-nums sm:text-4xl">
+              {isLoading ? "—" : (value ?? 0).toLocaleString("en-US")}
+            </dd>
+            <dt className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
+              {label}
+            </dt>
           </div>
         ))}
-      </div>
+      </dl>
     </section>
   );
 }

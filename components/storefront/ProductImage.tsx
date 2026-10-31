@@ -8,22 +8,28 @@ interface ProductImageProps {
   className?: string;
   imageClassName?: string;
   priority?: boolean;
+  fit?: "cover" | "contain";
   sizes?: string;
 }
 
-/** Renders a product image with a graceful placeholder when none is present. */
+/**
+ * Product image with a graceful placeholder when none is present.
+ * `cover` fills the frame (default — best for photos), `contain` letterboxes
+ * the whole image inside the frame (best for diagrams/logos).
+ */
 export function ProductImage({
   src,
   alt,
   className,
   imageClassName,
   priority,
-  sizes = "(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw",
+  fit = "cover",
+  sizes = "(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw",
 }: ProductImageProps) {
   return (
     <div
       className={cn(
-        "relative flex items-center justify-center overflow-hidden bg-shop_light_bg",
+        "relative flex items-center justify-center overflow-hidden bg-paper-deep",
         className,
       )}
     >
@@ -34,10 +40,17 @@ export function ProductImage({
           fill
           priority={priority}
           sizes={sizes}
-          className={cn("object-contain p-2 hoverEffect", imageClassName)}
+          className={cn(
+            fit === "contain" ? "object-contain p-3" : "object-cover",
+            imageClassName,
+          )}
         />
       ) : (
-        <Package className="h-10 w-10 text-gray-300" strokeWidth={1.5} />
+        <Package
+          className="size-10 text-ink-soft/40"
+          strokeWidth={1.5}
+          aria-label={alt}
+        />
       )}
     </div>
   );
